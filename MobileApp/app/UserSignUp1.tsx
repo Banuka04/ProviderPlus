@@ -524,6 +524,33 @@ const UserSignUp1 = ({ navigation }: any) => {
                         </LinearGradient>
                     </Pressable>
 
+                    {/* OR DIVIDER */}
+                    <View style={styles.dividerContainer}>
+                        <View style={styles.divider} />
+                        <Text style={styles.dividerText}>OR</Text>
+                        <View style={styles.divider} />
+                    </View>
+
+                    {/* GOOGLE SIGN-IN BUTTON */}
+                    <Pressable
+                        style={[styles.googleButton, (isLoading || isGoogleLoading) && styles.googleButtonDisabled]}
+                        onPress={handleGoogleSignIn}
+                        disabled={isLoading || isGoogleLoading}
+                    >
+                        {isGoogleLoading ? (
+                            <ActivityIndicator color="#FFF" size="small" />
+                        ) : (
+                            <>
+                                <Image
+                                    source={{ uri: "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" }}
+                                    style={styles.googleIcon}
+                                />
+                                <Text style={styles.googleButtonText}>Continue with Google</Text>
+                            </>
+                        )}
+                    </Pressable>
+
+
                     {/* Already have account */}
                     <View style={styles.loginLinkContainer}>
                         <Text style={styles.loginLinkText}>Already have an account? </Text>
@@ -669,6 +696,47 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.8)',
         textAlign: 'center',
         lineHeight: 24,
+    },
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+        marginHorizontal: 20,
+    },
+    divider: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    dividerText: {
+        color: '#FFF',
+        paddingHorizontal: 15,
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    googleButton: {
+        marginHorizontal: 20,
+        backgroundColor: '#FFF',
+        borderRadius: 30,
+        height: 60,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        marginBottom: 10,
+    },
+    googleButtonDisabled: {
+        opacity: 0.7,
+    },
+    googleIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 12,
+    },
+    googleButtonText: {
+        color: '#000',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 
