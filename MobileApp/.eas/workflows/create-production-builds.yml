@@ -1,17 +1,15 @@
 name: Create Production Builds
 
-# This section tells GitHub WHEN to run the pipeline
 on:
   push:
     branches:
       - main
-      - dev  # Added to ensure your current work triggers the build
+      - dev
   pull_request:
     branches:
       - main
       - dev
 
-# This section tells EAS WHAT to do
 jobs:
   build_android:
     name: Build Android Production
@@ -19,3 +17,5 @@ jobs:
     params:
       platform: android
       profile: production
+    # Automatically retry once if it fails due to a network timeout
+    retries: 1
