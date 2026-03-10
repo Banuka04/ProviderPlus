@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services.geolocation_service import (
+from ..services.geolocation_service import (
     save_sp_location,
     find_nearby_sps,
     update_live_location,

@@ -44,13 +44,36 @@ export default function MapScreen() {
             setLoading(false);
             return;
         }
-        let location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
 
-        setUserLocation({ latitude, longitude });
-        setPinnedLocation({ latitude, longitude });
-        fetchAddress(latitude, longitude);
-        setLoading(false);
+        try {
+            // Try Low accuracy first (fastest — WiFi/cell towers, avoids new arch hang)
+            let location: Location.LocationObject;
+            try {
+                location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Low,
+                    mayShowUserSettingsDialog: false,
+                });
+            } catch {
+                // Fallback to Lowest if Low fails
+                location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Lowest,
+                    mayShowUserSettingsDialog: false,
+                });
+            }
+
+            const { latitude, longitude } = location.coords;
+            setUserLocation({ latitude, longitude });
+            setPinnedLocation({ latitude, longitude });
+            fetchAddress(latitude, longitude);
+        } catch (error) {
+            console.warn("⚠️ Could not get location:", error);
+            // Fall back to default coordinates (Colombo) if location completely fails
+            setUserLocation({ latitude: 6.9271, longitude: 79.8612 });
+            setPinnedLocation({ latitude: 6.9271, longitude: 79.8612 });
+            setAddress("Location unavailable");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const fetchAddress = async (lat: number, lng: number) => {

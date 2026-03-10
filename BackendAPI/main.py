@@ -118,7 +118,6 @@ app.include_router(analysis_routes.router, prefix="/api/ai-integration", tags=["
 
 # Auth Routes
 app.include_router(auth_routes.router, prefix="/api", tags=["Authentication"])
-app.include_router(provider_routes.router, prefix="/api/category-search")
 app.include_router(geolocation_routes.router, prefix="/api")
 
 # Provider Routes
