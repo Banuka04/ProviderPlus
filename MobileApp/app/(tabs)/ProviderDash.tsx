@@ -21,6 +21,8 @@ import {
   fetchDashboardData,
 } from '../services/dashboardService';
 
+import{ useRouter} from 'expo-router';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Types ────────────────────────────────────────────────────
@@ -199,6 +201,9 @@ const AIOverviewCard: React.FC<AIOverviewCardProps> = ({ overview, loading, erro
 // ─── Main Dashboard Screen ────────────────────────────────────
 
 const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ navigation, route }) => {
+
+    const router = useRouter();
+
   const providerName: string = route?.params?.providerName || 'Nimal Chandra';
   const providerId: string = route?.params?.providerId || 'provider_001';
   const jobRole: string = route?.params?.jobRole || 'Plumber';
@@ -286,7 +291,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ navigation, route
   return (
     <>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      <LinearGradient colors={['#17AEFF', '#003D96']} style={styles.container}>
+      <LinearGradient colors={['#1086b5', '#022373']} style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -321,7 +326,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ navigation, route
 
               <TouchableOpacity
                 style={styles.bellButton}
-                onPress={() => navigation?.navigate?.('Notifications')}
+                onPress={() => router.push('../ProviderAlerts')}
               >
                 <Text style={styles.bellIcon}>🔔</Text>
                 {dashboardData.notifications > 0 && (
