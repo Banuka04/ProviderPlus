@@ -1,17 +1,3 @@
-/**
- * ProviderProfiledit.tsx
- * Provider+ App — Provider Profile Editing Screen
- *
- * Changes in this commit:
- *  - LinearGradient background (#1086b5 → #022373)
- *  - Skills chips center-aligned
- *  - Provider+ logo in top right of header
- *  - Edit Details button removed
- *
- * Required packages:
- *   npx expo install expo-image-picker expo-document-picker expo-linear-gradient
- */
-
 import React, { useState, useCallback } from 'react';
 import {
   View,
@@ -336,8 +322,10 @@ export default function ProviderProfiledit(): React.JSX.Element {
   const [name, setName]                 = useState<string>('');
   const [email, setEmail]               = useState<string>('');
   const [contact, setContact]           = useState<string>('');
-  const [nic, setNic]                   = useState<string>('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  // NIC — attachment only (no text field)
+  const [nicAttachments, setNicAttachments] = useState<AttachmentFile[]>([]);
 
   const [category, setCategory]                         = useState<string>('');
   const [categoryModalVisible, setCategoryModalVisible] = useState<boolean>(false);
@@ -349,7 +337,6 @@ export default function ProviderProfiledit(): React.JSX.Element {
   const [showSkillInput, setShowSkillInput]     = useState<boolean>(false);
 
   const [location, setLocation] = useState<SelectedLocation | null>(null);
-  const [brNumber, setBrNumber] = useState<string>('');
   const [brCertAttachments, setBrCertAttachments] = useState<AttachmentFile[]>([]);
 
   // ── Validation errors ─────────────────────────────────────────────────────
@@ -429,6 +416,63 @@ export default function ProviderProfiledit(): React.JSX.Element {
 
   const removeWork = (index: number): void =>
     setWorks((prev) => prev.filter((_, i) => i !== index));
+
+  // ── NIC attachment ────────────────────────────────────────────────────────
+
+  const handleNicAttachment = (): void => {
+    Alert.alert(
+      'Attach NIC',
+      'Choose how to add your NIC',
+      [
+        {
+          text: 'Camera',
+          onPress: async () => {
+            const permission = await ImagePicker.requestCameraPermissionsAsync();
+            if (!permission.granted) {
+              Alert.alert('Permission denied', 'Camera access is required.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: false,
+              quality: 0.9,
+            });
+            if (!result.canceled && result.assets.length > 0) {
+              const file = result.assets[0];
+              setNicAttachments(prev => [
+                ...prev,
+                { name: `nic_${Date.now()}.jpg`, uri: file.uri },
+              ]);
+            }
+          },
+        },
+        {
+          text: 'Photo Library',
+          onPress: async () => {
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+              Alert.alert('Permission denied', 'Media library access is required.');
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsMultipleSelection: true,
+              quality: 0.9,
+            });
+            if (!result.canceled) {
+              const files: AttachmentFile[] = result.assets.map((a) => ({
+                name: a.fileName ?? `nic_${Date.now()}.jpg`,
+                uri: a.uri,
+              }));
+              setNicAttachments(prev => [...prev, ...files]);
+            }
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
+  };
 
   // ── BR Certificate attachment ─────────────────────────────────────────────
 
@@ -514,8 +558,6 @@ export default function ProviderProfiledit(): React.JSX.Element {
     const newErrors: Record<string, string> = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d{7,15}$/;
-    // Sri Lankan NIC: old format = 9 digits + V/X, new format = 12 digits
-    const nicRegex   = /^(\d{9}[VXvx]|\d{12})$/;
 
     if (!name.trim())
       newErrors.name = 'Full name is required';
@@ -529,9 +571,6 @@ export default function ProviderProfiledit(): React.JSX.Element {
       newErrors.contact = 'Contact number is required';
     else if (!phoneRegex.test(contact.trim()))
       newErrors.contact = 'Enter a valid contact number (7–15 digits)';
-
-    if (nic.trim() && !nicRegex.test(nic.trim()))
-      newErrors.nic = 'Invalid NIC — use 9 digits + V/X (old) or 12 digits (new)';
 
     if (!category)
       newErrors.category = 'Please select a service category';
@@ -645,9 +684,54 @@ export default function ProviderProfiledit(): React.JSX.Element {
               <View style={styles.divider} />
               <InputField label="Contact No." value={contact} onChangeText={(t) => { setContact(t); setErrors(e => ({ ...e, contact: '' })); }} keyboardType="phone-pad" />
               {err('contact')}
+
               <View style={styles.divider} />
-              <InputField label="NIC" value={nic} onChangeText={(t) => { setNic(t); setErrors(e => ({ ...e, nic: '' })); }} />
-              {err('nic')}
+
+              {/* NIC — attachment only */}
+              <Text style={styles.inputLabel}>NIC</Text>
+              <TouchableOpacity
+                style={styles.brCertField}
+                onPress={handleNicAttachment}
+                activeOpacity={0.8}
+              >
+                <View>
+                  <Text style={styles.attachmentLabel}>Attachments</Text>
+                  {nicAttachments.length === 0 ? (
+                    <Text style={styles.attachmentPlaceholder}>
+                      Attach front &amp; back photos of your NIC
+                    </Text>
+                  ) : (
+                    <Text style={styles.attachmentCount}>
+                      {nicAttachments.length} photo{nicAttachments.length > 1 ? 's' : ''} attached
+                    </Text>
+                  )}
+                </View>
+                <Feather name="id-card" size={18} color={COLORS.textMuted} />
+              </TouchableOpacity>
+
+              {nicAttachments.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.attachmentPreviewRow}
+                >
+                  {nicAttachments.map((file, fi) => (
+                    <View key={fi} style={styles.attachmentChip}>
+                      <Feather name="image" size={12} color={COLORS.accentLight} />
+                      <Text style={styles.attachmentChipText} numberOfLines={1}>
+                        {file.name.length > 14 ? file.name.slice(0, 12) + '…' : file.name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setNicAttachments(prev => prev.filter((_, i) => i !== fi))
+                        }
+                      >
+                        <AntDesign name="close" size={10} color={COLORS.textMuted} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
             </View>
 
             {/* ── Service Information ── */}
@@ -769,13 +853,8 @@ export default function ProviderProfiledit(): React.JSX.Element {
             </TouchableOpacity>
             {err('location')}
 
-            {/* ── BR Number + Certificate ── */}
+            {/* ── BR Certificate ── */}
             <View style={styles.card}>
-              <InputField value={brNumber} onChangeText={setBrNumber} placeholder="BR Number" />
-
-              <View style={styles.divider} />
-
-              {/* BR Certificate attachment */}
               <Text style={styles.inputLabel}>BR Certificate</Text>
               <TouchableOpacity
                 style={styles.brCertField}
@@ -797,7 +876,6 @@ export default function ProviderProfiledit(): React.JSX.Element {
                 <Feather name="paperclip" size={18} color={COLORS.textMuted} />
               </TouchableOpacity>
 
-              {/* Preview chips */}
               {brCertAttachments.length > 0 && (
                 <ScrollView
                   horizontal
