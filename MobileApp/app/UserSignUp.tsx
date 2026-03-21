@@ -12,14 +12,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signupUser } from './services/authService';
 import { configureGoogleSignIn, signInWithGoogle } from './services/googleAuthService';
-
-// ── Component ─────────────────────────────────────────────────────────────────
+import { useLanguage } from './context/LanguageContext'; // ✅ ADDED
 
 const UserSignUp = () => {
 
     useEffect(() => {
         configureGoogleSignIn();
     }, []);
+
+    // ✅ get from context
+    const { t, isSinhala } = useLanguage();
+
+    // ✅ Pre-register all texts so auto-translate picks them up
+    useEffect(() => {
+        t('Create Account');
+        t('Sign up as a customer');
+        t('Full Name');
+        t('Your full name');
+        t('Email');
+        t('Phone Number');
+        t('Password');
+        t('Min. 8 characters');
+        t('Confirm Password');
+        t('Repeat password');
+        t('CREATE ACCOUNT');
+        t('Continue with Google');
+        t('Already have an account? Sign In');
+    }, [isSinhala]);
 
     // Form fields
     const [fullName, setFullName]               = useState('');
@@ -29,43 +48,43 @@ const UserSignUp = () => {
     const [phoneNumber, setPhoneNumber]         = useState('');
 
     // UI state
-    const [showPassword, setShowPassword]             = useState(false);
+    const [showPassword, setShowPassword]               = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoading, setIsLoading]                   = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading]       = useState(false);
+    const [isLoading, setIsLoading]                     = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading]         = useState(false);
 
     // Field errors
-    const [fullNameError, setFullNameError]             = useState('');
-    const [emailError, setEmailError]                   = useState('');
-    const [passwordError, setPasswordError]             = useState('');
+    const [fullNameError, setFullNameError]               = useState('');
+    const [emailError, setEmailError]                     = useState('');
+    const [passwordError, setPasswordError]               = useState('');
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
-    const [phoneError, setPhoneError]                   = useState('');
+    const [phoneError, setPhoneError]                     = useState('');
 
     // ── Validation ─────────────────────────────────────────────────────────────
 
     const handleFullNameInput = (text: string) => {
         const filtered = text.replace(/[^a-zA-Z\s]/g, '');
         setFullName(filtered);
-        if (filtered.trim().length === 0)       setFullNameError('Full name is required');
-        else if (filtered.trim().length < 3)    setFullNameError('Full name must be at least 3 characters');
-        else                                    setFullNameError('');
+        if (filtered.trim().length === 0)     setFullNameError('Full name is required');
+        else if (filtered.trim().length < 3)  setFullNameError('Full name must be at least 3 characters');
+        else                                  setFullNameError('');
     };
 
     const validateEmail = (text: string) => {
         setEmail(text);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (text.trim().length === 0)           setEmailError('Email is required');
-        else if (!emailRegex.test(text))        setEmailError('Invalid email format');
-        else                                    setEmailError('');
+        if (text.trim().length === 0)         setEmailError('Email is required');
+        else if (!emailRegex.test(text))      setEmailError('Invalid email format');
+        else                                  setEmailError('');
     };
 
     const handlePasswordInput = (text: string) => {
         setPassword(text);
-        if (text.length === 0)                  setPasswordError('Password is required');
-        else if (text.length < 8)               setPasswordError('Minimum 8 characters');
+        if (text.length === 0)                setPasswordError('Password is required');
+        else if (text.length < 8)             setPasswordError('Minimum 8 characters');
         else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(text))
             setPasswordError('Must include uppercase, lowercase and a number');
-        else                                    setPasswordError('');
+        else                                  setPasswordError('');
 
         if (confirmPassword) {
             setConfirmPasswordError(text !== confirmPassword ? 'Passwords do not match' : '');
@@ -74,18 +93,18 @@ const UserSignUp = () => {
 
     const handleConfirmPasswordInput = (text: string) => {
         setConfirmPassword(text);
-        if (text.length === 0)          setConfirmPasswordError('Please confirm your password');
-        else if (text !== password)     setConfirmPasswordError('Passwords do not match');
-        else                            setConfirmPasswordError('');
+        if (text.length === 0)        setConfirmPasswordError('Please confirm your password');
+        else if (text !== password)   setConfirmPasswordError('Passwords do not match');
+        else                          setConfirmPasswordError('');
     };
 
     const handlePhoneInput = (text: string) => {
         const filtered = text.replace(/[^0-9]/g, '');
         if (filtered.length <= 10) {
             setPhoneNumber(filtered);
-            if (filtered.length === 0)          setPhoneError('Phone number is required');
-            else if (filtered.length < 10)      setPhoneError('Phone number must be exactly 10 digits');
-            else                                setPhoneError('');
+            if (filtered.length === 0)        setPhoneError('Phone number is required');
+            else if (filtered.length < 10)    setPhoneError('Phone number must be exactly 10 digits');
+            else                              setPhoneError('');
         }
     };
 
@@ -182,17 +201,17 @@ const UserSignUp = () => {
                             <Ionicons name="arrow-back" size={22} color="#fff" />
                         </TouchableOpacity>
 
-                        {/* Title */}
-                        <Text style={styles.title}>Create Account</Text>
-                        <Text style={styles.subtitle}>Sign up as a customer</Text>
+                        {/* ✅ Title */}
+                        <Text style={styles.title}>{t('Create Account')}</Text>
+                        <Text style={styles.subtitle}>{t('Sign up as a customer')}</Text>
 
                         {/* ── Full Name ── */}
-                        <Text style={styles.fieldLabel}>Full Name</Text>
+                        <Text style={styles.fieldLabel}>{t('Full Name')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="person-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Your full name"
+                                placeholder={t('Your full name')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={fullName}
                                 onChangeText={handleFullNameInput}
@@ -203,7 +222,7 @@ const UserSignUp = () => {
                         {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
 
                         {/* ── Email ── */}
-                        <Text style={styles.fieldLabel}>Email</Text>
+                        <Text style={styles.fieldLabel}>{t('Email')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="mail-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
@@ -220,7 +239,7 @@ const UserSignUp = () => {
                         {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
                         {/* ── Phone ── */}
-                        <Text style={styles.fieldLabel}>Phone Number</Text>
+                        <Text style={styles.fieldLabel}>{t('Phone Number')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="call-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
@@ -237,12 +256,12 @@ const UserSignUp = () => {
                         {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
                         {/* ── Password ── */}
-                        <Text style={styles.fieldLabel}>Password</Text>
+                        <Text style={styles.fieldLabel}>{t('Password')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="lock-closed-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Min. 8 characters"
+                                placeholder={t('Min. 8 characters')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={password}
                                 onChangeText={handlePasswordInput}
@@ -260,12 +279,12 @@ const UserSignUp = () => {
                         {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
                         {/* ── Confirm Password ── */}
-                        <Text style={styles.fieldLabel}>Confirm Password</Text>
+                        <Text style={styles.fieldLabel}>{t('Confirm Password')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="lock-closed-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Repeat password"
+                                placeholder={t('Repeat password')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={confirmPassword}
                                 onChangeText={handleConfirmPasswordInput}
@@ -290,7 +309,7 @@ const UserSignUp = () => {
                         >
                             {isLoading
                                 ? <ActivityIndicator color="#000" size="small" />
-                                : <Text style={styles.submitBtnText}>CREATE ACCOUNT</Text>
+                                : <Text style={styles.submitBtnText}>{t('CREATE ACCOUNT')}</Text>
                             }
                         </Pressable>
 
@@ -315,7 +334,8 @@ const UserSignUp = () => {
                                         source={{ uri: 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png' }}
                                         style={styles.googleIcon}
                                     />
-                                    <Text style={styles.googleButtonText}>Continue with Google</Text>
+                                    {/* ✅ */}
+                                    <Text style={styles.googleButtonText}>{t('Continue with Google')}</Text>
                                 </>
                             )}
                         </Pressable>
@@ -326,7 +346,8 @@ const UserSignUp = () => {
                             onPress={() => router.replace('/UserLogin')}
                             disabled={isLoading}
                         >
-                            <Text style={styles.loginLinkText}>Already have an account? Sign In</Text>
+                            {/* ✅ */}
+                            <Text style={styles.loginLinkText}>{t('Already have an account? Sign In')}</Text>
                         </Pressable>
 
                     </ScrollView>
@@ -342,12 +363,9 @@ const styles = StyleSheet.create({
     mainContainer: { flex: 1 },
     safeArea:      { flex: 1, zIndex: 1 },
     scrollContent: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 100 },
-
     backBtn:  { marginBottom: 16 },
     title:    { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 1, marginBottom: 4 },
     subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 28 },
-
-    // Fields
     fieldLabel: {
         color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '700',
         marginBottom: 6, marginTop: 14, letterSpacing: 0.3,
@@ -365,8 +383,6 @@ const styles = StyleSheet.create({
         color: '#FFD700', fontSize: 12, marginLeft: 4,
         marginTop: 4, fontWeight: '600',
     },
-
-    // Submit button
     submitBtn: {
         backgroundColor: '#fff', borderRadius: 30, height: 60,
         justifyContent: 'center', alignItems: 'center',
@@ -374,13 +390,9 @@ const styles = StyleSheet.create({
     },
     submitBtnDisabled: { opacity: 0.7 },
     submitBtnText: { color: '#004eba', fontSize: 17, fontWeight: '900', letterSpacing: 1 },
-
-    // Divider
     dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
     divider:          { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
     dividerText:      { color: '#fff', paddingHorizontal: 15, fontSize: 14, fontWeight: 'bold' },
-
-    // Google button
     googleButton: {
         backgroundColor: '#fff', borderRadius: 30, height: 60,
         flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
@@ -389,8 +401,6 @@ const styles = StyleSheet.create({
     googleButtonDisabled: { opacity: 0.7 },
     googleIcon:       { width: 24, height: 24, marginRight: 12 },
     googleButtonText: { color: '#000', fontSize: 16, fontWeight: '600' },
-
-    // Login link
     loginLink:     { alignSelf: 'center', padding: 12, marginTop: 4 },
     loginLinkText: { color: 'rgba(255,255,255,0.8)', textDecorationLine: 'underline', fontSize: 14 },
 });
