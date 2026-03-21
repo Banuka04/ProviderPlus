@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     StyleSheet, Image, Text, View, Pressable, TextInput,
     StatusBar, Alert, ActivityIndicator, ScrollView,
@@ -8,36 +8,59 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-
-// ─────────────────────────────────────────────────────────────────────────────
+import { getUserProfile, updateUserProfile } from './services/userService';
+import { useAuth } from './context/AuthContext';
 
 export default function CustomerAccountEdit() {
-    const [fullName, setFullName]          = useState('');
-    const [mobile, setMobile]              = useState('');
-    const [email]                          = useState('senujaranmith3169@gmail.com');
-    const [birthday, setBirthday]          = useState('');
-    const [gender, setGender]              = useState('');
-    const [language, setLanguage]          = useState('English');
-    const [emergencyContact, setEmergency] = useState('');
-    const [isSinhala, setIsSinhala]        = useState(false);
-    const [isLoading, setIsLoading]        = useState(false);
-    const [showGenderPicker, setShowGenderPicker] = useState(false);
+    const [fullName, setFullName]   = useState('');
+    const [mobile, setMobile]       = useState('');
+    const [email, setEmail]         = useState('');
+    const [birthday, setBirthday]   = useState('');
+    const [gender, setGender]       = useState('');
+    const [isSinhala, setIsSinhala] = useState(false);
 
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
+    const [showGenderPicker, setShowGenderPicker] = useState(false);
     const genderOptions = ['Male', 'Female', 'Prefer not to say'];
 
-    const toggleLanguage = () => {
-        setIsSinhala(p => !p);
-        setLanguage(p => p === 'English' ? 'සිංහල' : 'English');
+    const { signOut } = useAuth();
+
+    // ── Load existing profile data when screen opens ──
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const loadProfile = async () => {
+        try {
+            const data = await getUserProfile();
+            setFullName(data.full_name ?? '');
+            setMobile(data.phone_number ?? '');
+            setEmail(data.email ?? '');
+            setBirthday(data.birthday ?? '');
+            setGender(data.gender ?? '');
+        } catch (error) {
+            console.error('Failed to load profile:', error);
+        } finally {
+            setIsFetching(false);
+        }
     };
 
+    // ── Save changes to backend ──
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            // TODO: connect to your API using apiClient
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            Alert.alert('Success', 'Your profile has been updated!', [
-                { text: 'OK', onPress: () => router.back() },
-            ]);
+            await updateUserProfile({
+                full_name: fullName,
+                phone_number: mobile,
+                birthday: birthday,
+                gender: gender,
+            });
+            Alert.alert(
+                'Success',
+                'Your profile has been updated!',
+                [{ text: 'OK', onPress: () => router.back() }]
+            );
         } catch (error: any) {
             Alert.alert('Error', error.message || 'Failed to update profile.');
         } finally {
@@ -48,9 +71,34 @@ export default function CustomerAccountEdit() {
     const handleLogout = () => {
         Alert.alert('Logout', 'Are you sure you want to logout?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Logout', style: 'destructive', onPress: () => router.replace('/(tabs)/UserLogin') },
+            {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: () => {
+                    signOut();
+                    router.replace('/(tabs)/UserLogin');
+                }
+            },
         ]);
     };
+
+    if (isFetching) {
+        return (
+            <View style={styles.mainContainer}>
+                <LinearGradient
+                    colors={['#00ADF5', '#004eba']}
+                    style={StyleSheet.absoluteFill}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator color="#FFF" size="large" />
+                    <Text style={{ color: '#FFF', marginTop: 12, fontSize: 14 }}>
+                        Loading your profile...
+                    </Text>
+                </View>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.mainContainer}>
@@ -60,7 +108,6 @@ export default function CustomerAccountEdit() {
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             />
-
             <SafeAreaView style={styles.safeArea}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -79,7 +126,7 @@ export default function CustomerAccountEdit() {
                                 <Text style={[styles.langLabel, isSinhala && styles.langLabelActive]}>සිං</Text>
                                 <Switch
                                     value={isSinhala}
-                                    onValueChange={toggleLanguage}
+                                    onValueChange={() => setIsSinhala(p => !p)}
                                     trackColor={{ false: 'rgba(255,255,255,0.3)', true: '#FF6B35' }}
                                     thumbColor={isSinhala ? '#fff' : '#f0f0f0'}
                                     ios_backgroundColor="rgba(255,255,255,0.3)"
@@ -118,7 +165,9 @@ export default function CustomerAccountEdit() {
                                     style={styles.textInput}
                                     placeholder={isSinhala ? 'සම්පූර්ණ නම' : 'Enter your full name'}
                                     placeholderTextColor="rgba(255,255,255,0.5)"
-                                    value={fullName} onChangeText={setFullName} editable={!isLoading}
+                                    value={fullName}
+                                    onChangeText={setFullName}
+                                    editable={!isLoading}
                                 />
                             </BlurView>
                         </View>
@@ -130,10 +179,12 @@ export default function CustomerAccountEdit() {
                                 <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/0/191.png' }} style={styles.fieldIcon} />
                                 <TextInput
                                     style={styles.textInput}
-                                    placeholder="+94XXXXXXXXX"
+                                    placeholder="07XXXXXXXX"
                                     placeholderTextColor="rgba(255,255,255,0.5)"
-                                    value={mobile} onChangeText={setMobile}
-                                    keyboardType="phone-pad" editable={!isLoading}
+                                    value={mobile}
+                                    onChangeText={setMobile}
+                                    keyboardType="phone-pad"
+                                    editable={!isLoading}
                                 />
                             </BlurView>
                         </View>
@@ -146,7 +197,11 @@ export default function CustomerAccountEdit() {
                             </View>
                             <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                                 <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/732/732200.png' }} style={styles.fieldIcon} />
-                                <TextInput style={[styles.textInput, styles.disabledInput]} value={email} editable={false} />
+                                <TextInput
+                                    style={[styles.textInput, styles.disabledInput]}
+                                    value={email}
+                                    editable={false}
+                                />
                             </BlurView>
                         </View>
 
@@ -159,7 +214,9 @@ export default function CustomerAccountEdit() {
                                     style={styles.textInput}
                                     placeholder="DD / MM / YYYY"
                                     placeholderTextColor="rgba(255,255,255,0.5)"
-                                    value={birthday} onChangeText={setBirthday} editable={!isLoading}
+                                    value={birthday}
+                                    onChangeText={setBirthday}
+                                    editable={!isLoading}
                                 />
                             </BlurView>
                         </View>
@@ -176,11 +233,13 @@ export default function CustomerAccountEdit() {
                                     <Text style={styles.dropdownArrow}>▾</Text>
                                 </BlurView>
                             </TouchableOpacity>
+
                             {showGenderPicker && (
                                 <BlurView intensity={30} tint="light" style={styles.dropdownContainer}>
                                     {genderOptions.map(option => (
                                         <TouchableOpacity
-                                            key={option} style={styles.dropdownItem}
+                                            key={option}
+                                            style={styles.dropdownItem}
                                             onPress={() => { setGender(option); setShowGenderPicker(false); }}
                                         >
                                             <Text style={styles.dropdownItemText}>{option}</Text>
@@ -190,39 +249,11 @@ export default function CustomerAccountEdit() {
                             )}
                         </View>
 
-                        {/* ── YOUR PREFERENCES ── */}
-                        <Text style={[styles.sectionTitle, { marginTop: 10 }]}>
-                            {isSinhala ? 'ඔබේ මනාපයන්' : 'Your preferences'}
-                        </Text>
-
-                        {/* Language */}
-                        <View style={styles.fieldContainer}>
-                            <Text style={styles.fieldLabel}>{isSinhala ? 'භාෂාව' : 'Language'}</Text>
-                            <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
-                                <Text style={styles.fieldIconText}>Aa</Text>
-                                <Text style={styles.textInput}>{language}</Text>
-                            </BlurView>
-                        </View>
-
-                        {/* Emergency Contact */}
-                        <View style={styles.fieldContainer}>
-                            <Text style={styles.fieldLabel}>{isSinhala ? 'හදිසි සම්බන්ධතාව' : 'Emergency Contact'}</Text>
-                            <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
-                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/1387/1387537.png' }} style={styles.fieldIcon} />
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder={isSinhala ? 'හදිසි සම්බන්ධතාව' : 'Add emergency contact(s)'}
-                                    placeholderTextColor="rgba(255,255,255,0.5)"
-                                    value={emergencyContact} onChangeText={setEmergency}
-                                    keyboardType="phone-pad" editable={!isLoading}
-                                />
-                            </BlurView>
-                        </View>
-
                         {/* ── SAVE BUTTON ── */}
                         <Pressable
                             style={[styles.saveButton, isLoading && { opacity: 0.7 }]}
-                            onPress={handleSave} disabled={isLoading}
+                            onPress={handleSave}
+                            disabled={isLoading}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="#000" size="small" />
@@ -251,8 +282,6 @@ export default function CustomerAccountEdit() {
     );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
     mainContainer: { flex: 1 },
     safeArea:      { flex: 1, zIndex: 1 },
@@ -263,8 +292,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between', marginTop: 10, marginBottom: 20,
     },
-    backButton:  { padding: 8 },
-    backArrow:   { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 36 },
+    backButton: {
+        width: 40, height: 40, borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        alignItems: 'center', justifyContent: 'center',
+        padding: 0,
+    },
+    backArrow:   { color: '#FFF', fontSize: 28, fontWeight: '300', lineHeight: 32 },
     headerTitle: { color: '#FFF', fontSize: 20, fontWeight: '800', letterSpacing: 1 },
 
     // Language Toggle
@@ -315,7 +349,6 @@ const styles = StyleSheet.create({
     textInput:     { flex: 1, color: '#FFF', fontSize: 15, fontWeight: '500' },
     disabledInput: { color: 'rgba(255,255,255,0.6)' },
     fieldIcon:     { width: 20, height: 20, tintColor: 'rgba(255,255,255,0.7)', marginRight: 12 },
-    fieldIconText: { color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: '700', marginRight: 12 },
     dropdownArrow: { color: 'rgba(255,255,255,0.7)', fontSize: 18 },
 
     // Gender Dropdown
