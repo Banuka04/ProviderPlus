@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signupUser } from './services/authService';
 import { configureGoogleSignIn, signInWithGoogle } from './services/googleAuthService';
+import { useLanguage } from './context/LanguageContext'; // ✅ ADDED
 import { useAuth } from './context/AuthContext';
 
 const UserSignUp = () => {
@@ -20,6 +21,25 @@ const UserSignUp = () => {
         configureGoogleSignIn();
     }, []);
 
+    // ✅ get from context
+    const { t, isSinhala } = useLanguage();
+
+    // ✅ Pre-register all texts so auto-translate picks them up
+    useEffect(() => {
+        t('Create Account');
+        t('Sign up as a customer');
+        t('Full Name');
+        t('Your full name');
+        t('Email');
+        t('Phone Number');
+        t('Password');
+        t('Min. 8 characters');
+        t('Confirm Password');
+        t('Repeat password');
+        t('CREATE ACCOUNT');
+        t('Continue with Google');
+        t('Already have an account? Sign In');
+    }, [isSinhala]);
     const { setRole } = useAuth();
 
     // Form fields
@@ -195,17 +215,17 @@ const UserSignUp = () => {
                             <Ionicons name="arrow-back" size={22} color="#fff" />
                         </TouchableOpacity>
 
-                        {/* Title */}
-                        <Text style={styles.title}>Create Account</Text>
-                        <Text style={styles.subtitle}>Sign up as a customer</Text>
+                        {/* ✅ Title */}
+                        <Text style={styles.title}>{t('Create Account')}</Text>
+                        <Text style={styles.subtitle}>{t('Sign up as a customer')}</Text>
 
-                        {/* Full Name */}
-                        <Text style={styles.fieldLabel}>Full Name</Text>
+                        {/* ── Full Name ── */}
+                        <Text style={styles.fieldLabel}>{t('Full Name')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="person-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Your full name"
+                                placeholder={t('Your full name')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={fullName}
                                 onChangeText={handleFullNameInput}
@@ -215,8 +235,8 @@ const UserSignUp = () => {
                         </BlurView>
                         {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
 
-                        {/* Email */}
-                        <Text style={styles.fieldLabel}>Email</Text>
+                        {/* ── Email ── */}
+                        <Text style={styles.fieldLabel}>{t('Email')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="mail-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
@@ -232,8 +252,8 @@ const UserSignUp = () => {
                         </BlurView>
                         {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-                        {/* Phone */}
-                        <Text style={styles.fieldLabel}>Phone Number</Text>
+                        {/* ── Phone ── */}
+                        <Text style={styles.fieldLabel}>{t('Phone Number')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="call-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
@@ -249,13 +269,13 @@ const UserSignUp = () => {
                         </BlurView>
                         {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
-                        {/* Password */}
-                        <Text style={styles.fieldLabel}>Password</Text>
+                        {/* ── Password ── */}
+                        <Text style={styles.fieldLabel}>{t('Password')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="lock-closed-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Min. 8 characters"
+                                placeholder={t('Min. 8 characters')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={password}
                                 onChangeText={handlePasswordInput}
@@ -272,13 +292,13 @@ const UserSignUp = () => {
                         </BlurView>
                         {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-                        {/* Confirm Password */}
-                        <Text style={styles.fieldLabel}>Confirm Password</Text>
+                        {/* ── Confirm Password ── */}
+                        <Text style={styles.fieldLabel}>{t('Confirm Password')}</Text>
                         <BlurView intensity={25} tint="light" style={styles.inputWrapper}>
                             <Ionicons name="lock-closed-outline" size={18} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.textInput}
-                                placeholder="Repeat password"
+                                placeholder={t('Repeat password')}
                                 placeholderTextColor="rgba(255,255,255,0.5)"
                                 value={confirmPassword}
                                 onChangeText={handleConfirmPasswordInput}
@@ -303,7 +323,7 @@ const UserSignUp = () => {
                         >
                             {isLoading
                                 ? <ActivityIndicator color="#000" size="small" />
-                                : <Text style={styles.submitBtnText}>CREATE ACCOUNT</Text>
+                                : <Text style={styles.submitBtnText}>{t('CREATE ACCOUNT')}</Text>
                             }
                         </Pressable>
 
@@ -328,7 +348,8 @@ const UserSignUp = () => {
                                         source={{ uri: 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png' }}
                                         style={styles.googleIcon}
                                     />
-                                    <Text style={styles.googleButtonText}>Continue with Google</Text>
+                                    {/* ✅ */}
+                                    <Text style={styles.googleButtonText}>{t('Continue with Google')}</Text>
                                 </>
                             )}
                         </Pressable>
@@ -339,7 +360,8 @@ const UserSignUp = () => {
                             onPress={() => router.replace('/(tabs)/UserLogin')}
                             disabled={isLoading}
                         >
-                            <Text style={styles.loginLinkText}>Already have an account? Sign In</Text>
+                            {/* ✅ */}
+                            <Text style={styles.loginLinkText}>{t('Already have an account? Sign In')}</Text>
                         </Pressable>
 
                     </ScrollView>
@@ -353,11 +375,9 @@ const styles = StyleSheet.create({
     mainContainer: { flex: 1 },
     safeArea:      { flex: 1, zIndex: 1 },
     scrollContent: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 100 },
-
     backBtn:  { marginBottom: 16 },
     title:    { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: 1, marginBottom: 4 },
     subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 28 },
-
     fieldLabel: {
         color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '700',
         marginBottom: 6, marginTop: 14, letterSpacing: 0.3,
@@ -375,28 +395,24 @@ const styles = StyleSheet.create({
         color: '#FFD700', fontSize: 12, marginLeft: 4,
         marginTop: 4, fontWeight: '600',
     },
-
     submitBtn: {
         backgroundColor: '#fff', borderRadius: 30, height: 60,
         justifyContent: 'center', alignItems: 'center',
         marginTop: 28, elevation: 5,
     },
     submitBtnDisabled: { opacity: 0.7 },
-    submitBtnText:     { color: '#004eba', fontSize: 17, fontWeight: '900', letterSpacing: 1 },
-
+    submitBtnText: { color: '#004eba', fontSize: 17, fontWeight: '900', letterSpacing: 1 },
     dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
     divider:          { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
     dividerText:      { color: '#fff', paddingHorizontal: 15, fontSize: 14, fontWeight: 'bold' },
-
     googleButton: {
         backgroundColor: '#fff', borderRadius: 30, height: 60,
         flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
         elevation: 5, marginBottom: 10,
     },
     googleButtonDisabled: { opacity: 0.7 },
-    googleIcon:           { width: 24, height: 24, marginRight: 12 },
-    googleButtonText:     { color: '#000', fontSize: 16, fontWeight: '600' },
-
+    googleIcon:       { width: 24, height: 24, marginRight: 12 },
+    googleButtonText: { color: '#000', fontSize: 16, fontWeight: '600' },
     loginLink:     { alignSelf: 'center', padding: 12, marginTop: 4 },
     loginLinkText: { color: 'rgba(255,255,255,0.8)', textDecorationLine: 'underline', fontSize: 14 },
 });
